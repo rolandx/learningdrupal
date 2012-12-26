@@ -1,0 +1,7 @@
+name = User Login Bar
+description = Module that provides a new straight user login bar block
+package = User Login bar
+core = 7.x
+version = 7.x-1.x-dev
+project = userloginbar
+files[] = userloginbar.css

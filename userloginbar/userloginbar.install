@@ -1,0 +1,13 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the userloginbar module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function userloginbar_uninstall() {
+  variable_del('disable_welcome_box');
+}

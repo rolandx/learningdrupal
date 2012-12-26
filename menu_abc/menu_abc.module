@@ -1,0 +1,51 @@
+<?php
+/**
+ *@file
+ *演示Drupal中菜单API的基本用法,主要包括钩子hook_menu()
+ *
+ */
+
+/**
+ *实现hook_menu()
+ */
+function menu_abc_menu(){
+    $items['menu_abc'] =array(
+        
+        'title' => '菜单ABC',
+        //定义标题回调
+        'title callback' => 'menu_abc_my_title',
+        'description' => '一个简单的菜单项', 
+        'page callback' => 'menu_abc_callback_page',
+        //指定了回调函数的功能inc文件
+        'file' => 'menu_abc.pages.inc',
+        //指定注册用户访问abc
+        'access callback' => 'user_access',
+        'access arguments' => array('access abc'),
+        //菜单的位置也就是菜单的重量
+        'weight' => 10,
+        //放置在主菜单中
+        'menu_name' => 'main-menu',
+        'access callback' => True,
+      );
+      return $items;
+   
+      
+      $items['menu_abc/sub'] =array(
+        'title' => '菜单ABC子菜单',
+        'description' => '菜单ABC的子项', 
+        'page callback' => 'menu_abc_sub_callback_page',
+        //指定了回调函数的功能inc文件
+        'file' => 'menu_abc.pages.inc',
+        //定义页面参数
+        'page arguments' => array('B','C'),
+        //菜单的位置也就是菜单的重量
+        'weight' => 10,
+        //放置在主菜单中
+        'menu_name' => 'main-menu',
+        'access callback' => True,
+      );
+      return $items;
+}
+ 
+
+mysql

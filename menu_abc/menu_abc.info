@@ -1,0 +1,3 @@
+name = 菜单ABC
+description = 用来学习菜单API的简单实例模块
+core = 7.x

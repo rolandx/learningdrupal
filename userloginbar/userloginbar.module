@@ -1,0 +1,127 @@
+<?php
+
+/*
+ * Userloginbar is a module written by developers at Ebizon Technologies (www.ebizontek.com). It is the implementation of http://drupal.org/node/92657#comment-792952. This module creates a new user login bar block.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function userloginbar_menu() {
+
+  $items = array();
+
+  $items['admin/config/userloginbar'] = array(
+    'title' => 'UserLoginBar settings',
+    'description' => 'UserloginBar Settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('userloginbar_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'userloginbar.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function userloginbar_block_info() {
+  $blocks['userloginbarblock'] = array(
+    'info' => t("User Login Bar Block"),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function userloginbar_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'userloginbarblock':
+      $block['content'] = theme('userloginbar');
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function userloginbar_theme() {
+  return array(
+    'userloginbar' => array('arguments' => array()),
+  );
+}
+
+/**
+ * Theming function for messages.
+ */
+function theme_userloginbar() {
+  drupal_add_css(drupal_get_path('module', 'userloginbar') . '/userloginbar.css');
+  global $user;
+  $output = '';
+
+  if (arg(0) == "user" && !is_numeric(arg(1))) {
+
+    return;
+
+  }
+  if (!$user->uid) {
+    $output .= drupal_render(drupal_get_form('user_login_block'));
+  }
+  elseif (!variable_get('disable_welcome_box', FALSE)) {
+
+    $output .= t('<p class="user-info">Hi !user, welcome back.</p>',
+      array('!user' =>
+        theme_username(
+          array(
+            'account' => $user,
+            'name' => $user->name,
+            'extra' => NULL,
+            'attributes_array' => array(),
+          )
+        )
+      )
+    );
+
+    $output .= theme_item_list(
+      array(
+        'items' => array(
+          l(t('Your account'), 'user/' . $user->uid, array('attributes' => array('title' => t('Edit your account')))),
+          l(t('Sign out'), 'user/logout'),
+        ),
+        'title' => NULL,
+        'type'  => 'ul',
+        'attributes' => array(),
+      )
+    );
+  }
+
+  $output = '<div id="user-login-form">' . $output . '</div>';
+
+  return $output;
+}
+
+function userloginbar_form_alter(&$form, &$form_state, $form_id) {
+  global $form_values;
+  switch ($form_id) {
+    case 'user_login_block':
+      $form['#action'] = '?q=user&' . drupal_get_destination();
+      $form['#method'] = 'post';
+      $form['form_id'] = array(
+        '#type' => 'hidden',
+        '#default_value' => 'user_login',
+      );
+      $items = array();
+      if (variable_get('user_register', 1)) {
+        $items[] = l(t('Register'), 'user/register', array('attributes' => array('title' => t('Create a new user account.'))));
+      }
+      $items[] = l(t('Forgot Password?'), 'user/password', array('attributes' => array('title' => t('Request new password via e-mail.'))));
+
+      $form['links'] = array('#value' => filter_xss(theme_item_list(array('items' => array($items), 'title' => NULL, 'type'  => 'ul', 'attributes' => array()))));
+      break;
+  }
+}

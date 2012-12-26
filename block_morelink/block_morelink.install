@@ -1,0 +1,42 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+
+function block_morelink_schema(){
+  $schema['block_morelink']=array(
+      'description'=>'Store more link path',
+      'field'=>array(
+         'module'=array(
+             'type'=>'varchar',
+             'length'=>64,
+             'not null'=>TRUE,
+             'description'=>"The block's origin module,form{block}.module.",
+           ),
+
+          'delta'=array(
+             'type'=>'varchar',
+             'length'=>32,
+             'not null'=>TRUE,
+             'description'=>"The block's origin module,form{block}.delta.",
+           ),
+           'url'=array(
+             'type'=>'varchar',
+             'length'=>255,
+             'not null'=>TRUE,
+             'description'=>"The more link url of a block",
+           ),
+           'title'=array(
+             'type'=>'vachar',
+             'length'=>255,
+             'not null'=>TRUE,
+             'description'=>"The more link title of a block",
+           ),
+       ),
+       'primary key'=>array('module','delta','url','title'),
+       'indexes'=>array(
+         'url'=>array('url'),
+       ),
+  );
+  return $schema;
+}

@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * Implements hook_form_alter().
+ */
+function userreg_form_alter(&$form, $form_state, $form_id) {
+  switch ($form_id) {
+    case 'user_login':
+      //-----
+      //我们修改表单元素name的验证函数,使其支持邮箱
+      $form['name']['#title'] = t('用户名或电子邮件地址');
+      $form['name']['#element_validate'][] = 'userreg_user_login_validate';
+      break; 
+    case 'user_login_block':
+      //用户登录表单区块
+      $form['name']['#title'] = t('用户名或电子邮件地址');
+      $form['name']['#element_validate'][] = 'userreg_user_login_validate';
+      break;
+  }
+}
+
+/**
+ * 验证函数.
+ */
+function userreg_user_login_validate($form, &$form_state){
+  if (isset($form_state['values']['name'])) {
+    //如果用户输入的是邮箱的话,我们通过邮箱查询得到用户名.
+    $result = db_query("SELECT name FROM {users} WHERE LOWER(mail) = LOWER(:mail)", array(':mail' => $form_state['values']['name']));
+    $name = $result->fetchField();
+    //如果查询到了用户名,就使用它;反之,就使用原来的.
+    if (!empty($name)) {
+      $form_state['values']['name'] = $name;
+    }
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function userreg_menu(){
+  $items['user/schoolregister'] = array(
+    'title' => '学校机构用户注册',
+    'page callback'    => 'userreg_school_register_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'userreg.pages.inc',
+  );
+
+  $items['user/schoolregister/success'] = array(
+    'title' => '学校机构用户注册完毕',
+    'page callback'    => 'userreg_school_register_success_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'file' => 'userreg.pages.inc',
+  );
+  return $items;
+}

@@ -1,0 +1,147 @@
+<?php 
+/**
+ * @file
+ * 让用户为区块增加一个更多链接
+ *
+ * 在区块的配置页面，允许用户输入更多链接，在区块显示的时候，显示一个更多链接
+ */
+
+function block_morelink_form_block_admin_configure_form_alter(&$form,&$form_state){
+
+  $result=db_query("select url, title FROM{block_morelink}WHERE module=:module AND delta =:delta",
+                   array(
+                         /*:module和:delta为mysql中的展位符，防止sql注入*/
+                         ':module'=>$form['module']['#value'],
+                         ':delta' =>$form['delta']['#value'],
+                        ))->fetch();
+      $default_morelink_url=empty($result)?'':$result->url;
+      $default_morelink_title=empty($result)?'':$result->title;
+      $form['settings']['morelink_url']=array(
+        '#type'   =>'textfield',
+        '#title'  =>t('More Link url'),
+        '#maxlength' => 255,
+        '#description' => t('THe More Link url of the block as shown to the user'),
+        '#default_value'=>$default_morelink_url,
+        '#weight' =>-17,
+      );
+      $form['settings']['morelink_title']=array(
+        '#type'   =>'textfield',
+        '#title'  =>t('More Link title'),
+        '#maxlength' => 255,
+        '#description' => t('THe More Link url of the block as shown to the user'),
+        '#default_value'=>$default_morelink_url,
+        '#weight' =>-17,
+      );
+      $form['#validate'][]='block_morelink_block_admin_configure_validate';
+      $form['#submit'][]='block_morelink_block_admin_configure_submit';
+}
+
+
+//预处理函数preprocess
+//l函数把html标签写死在block中
+/*
+function block_morelink_preprocess_block(&$variables){
+  $result=db_query("select url, title FROM{block_morelink}WHERE module=:module AND delta =:delta",                                 
+                   array(                                                                                                          
+                     /*:module和:delta为mysql中的展位符，防止sql注入*/                                                         
+                     /*
+                        ':module'=>$form['module']['#value'],                                               
+                                 
+                        ':delta' =>$form['delta']['#value'],                                                                      
+                        ))->fetch();                                                                                               
+  $default_morelink_url=empty($result)?'':$result->url;                                                                        
+  $default_morelink_title=empty($result)?'':$result->title;    
+  $variables['block']->morelink='<span class="block-more-link">'.l(t('More')),$morelink_url,array(
+                    'attribute'=>array('title'=>$morelink_title)).'<span>';
+}
+*/
+
+function theme_block_morelink_link(&$variables){                                                                              
+  $result=db_query("select url, title FROM{block_morelink}WHERE module=:module AND delta =:delta",                                  
+                   array(                                                                                                           
+                     /*:module和:delta为mysql中的展位符，防止sql注入*/                                                              
+                      ':module'=>$form['module']['#value'],                                                                       
+                                                                                                                 
+                      ':delta' =>$form['delta']['#value'],                                                                        
+                       ))->fetch();                                                                                                
+  $default_morelink_url=empty($result)?'':$result->url;                                                                             
+  $default_morelink_title=empty($result)?'':$result->title;                                                                         
+  $variables['block']->morelink= theme('block_morelink_link',array('url'=>$morelink_url,'title'=>$morelink_title));                
+} 
+
+
+
+function block_morelink_form_block_add_block_form_alter(&$form,&$form_state){
+       block_morelink_form_block_admin_configure_alter($form,$form_state);      
+}
+
+
+function block_morelink_block_admin_configure_submit($form,&$form_state){
+/*
+http://api.drupal.org/api/drupal/includes!database!database.inc/function/db_delete/7
+db_delete('mid_cache_index')
+  ->condition('mid', 1)
+  ->condition('cache_type', 'year')
+  ->execute();
+*/
+     db_delete('block_morelink')
+     ->condition('module',$form_state['value']['module'])
+     ->condition('delta',$form_state['values']['delta'])  
+     ->execute();
+
+   if (!empty($form_state['values']['morelink_url'])){
+/*
+http://api.drupal.org/api/drupal/includes!database!database.inc/function/db_insert/7
+$nid = db_insert('node')
+  ->fields(array(
+    'title' => 'Example',
+    'uid' => 1,
+    'created' => REQUEST_TIME,
+  ))
+  ->execute();
+*/
+//key
+     $query = db_insert('block_morelink')
+            ->field(array(
+                          'url',
+                          'title',
+                          'module',
+                          'delta'));
+//value
+     $query->value(array(
+       'url'=>$form_state['values']['morelink_url'],
+       'title'=>$form_state['values']['morelink_title'],
+       'module'=>$form_state['values']['module'],
+       'delta'=>$form_state['values']['delta'],
+     ));
+     $query->execute();
+   }
+}
+
+
+/**
+ *Implements hook_theme()
+*/
+function block_morelink_theme(){
+     return array(
+        'block_morelink_link'=>array(
+        ),
+     );
+}
+
+/*
+ *Returns HTML for a "more" link,like those used in blocks.
+ *
+*/
+
+function theme_block_morelink_link($variable){
+   $output="";
+   if(!empty($variable['url'])){
+     $morelink_label=t('More');
+     $output .='<span class="block-more-link">'.l($morelink_label,$variable['url'],
+        array('attribute'=>array('title'=>$variable['title']))).'<span>';
+   }
+   return $output;
+}
+
+
